@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">Education Route</string>
+
+    <!-- Общие строки -->
+    <string name="login">Вход</string>
+    <string name="register">Регистрация</string>
+    <string name="email">Email</string>
+    <string name="password">Пароль</string>
+    <string name="confirm_password">Подтвердите пароль</string>
+    <string name="no_account">Нет аккаунта?</string>
+    <string name="have_account">Уже есть аккаунт?</string>
+    <string name="search_courses">Поиск курсов...</string>
+    <string name="type_message">Введите сообщение...</string>
+    <string name="send_message">Отправить сообщение</string>
+    <string name="edit_profile">Редактировать профиль</string>
+    <string name="logout">Выйти</string>
+
+    <!-- Экран курсов -->
+    <string name="available_courses">Доступные курсы</string>
+    <string name="my_courses">Мои курсы</string>
+    <string name="no_courses_enrolled">У вас нет активных курсов</string>
+    <string name="enroll_in_courses_prompt">Запишитесь на курсы, чтобы начать обучение</string>
+    <string name="enroll_button">Записаться</string>
+    <string name="course_day">День:</string>
+    <string name="course_age">Возраст:</string>
+    <string name="course_teacher">Преподаватель:</string>
+
+    <!-- Профиль -->
+    <string name="profile">Профиль</string>
+    <string name="personal_info">Личная информация</string>
+    <string name="phone">Телефон</string>
+    <string name="birth_date">Дата рождения</string>
+    <string name="education">Образование</string>
+    <string name="higher_education">Высшее</string>
+    <string name="settings">Настройки</string>
+    <string name="change_password">Изменить пароль</string>
+    <string name="notifications">Уведомления</string>
+    <string name="language">Язык</string>
+
+    <string name="details_button">Сведения</string>
+    <string name="unenroll_button">Отписаться</string>
+    <string name="lesson_details">Сведения о занятии</string>
+    <string name="topic_label">Тема:</string>
+    <string name="grade_label">Оценка:</string>
+    <string name="homework_label">Домашнее задание:</string>
+    <string name="no_grade">Нет оценки</string>
+    <string name="no_homework">Нет задания</string>
+    <string name="close_button">Закрыть</string>
+
+    <!-- Чат поддержки -->
+    <string name="support_chat">Чат поддержки</string>
+</resources>
