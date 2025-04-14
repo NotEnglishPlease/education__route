@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.educationroute.R
 import com.example.educationroute.data.Course
 import com.example.educationroute.ui.components.CourseCard
@@ -20,7 +21,7 @@ import com.example.educationroute.viewmodel.CourseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AvailableCoursesScreen() {
+fun AvailableCoursesScreen(navController: NavController) {
     val viewModel: CourseViewModel = viewModel()
     val courses = viewModel.availableCourses
     val searchQuery = remember { mutableStateOf("") }
@@ -46,11 +47,13 @@ fun AvailableCoursesScreen() {
                 )
             },
             trailingIcon = {
-                Icon(
-                    painter  = painterResource(R.drawable.ic_filter),
-                    contentDescription = "Фильтры",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                IconButton(onClick = { navController.navigate("filters") }) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_filter),
+                        contentDescription = "Фильтры",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             },
             placeholder = {
                 Text("Поиск курсов", color = MaterialTheme.colorScheme.onSurfaceVariant)

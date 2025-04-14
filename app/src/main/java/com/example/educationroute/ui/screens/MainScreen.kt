@@ -55,7 +55,7 @@ fun MainScreen(navController: NavController?) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(BottomNavItem.AvailableCourses.route) {
-                AvailableCoursesScreen()
+                AvailableCoursesScreen(navController!!)
             }
             composable(BottomNavItem.MyCourses.route) {
                 MyCoursesScreen()

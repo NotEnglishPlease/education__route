@@ -23,5 +23,8 @@ fun NavGraph() {
         composable("main") {
             MainScreen(navController)
         }
+        composable("filters") {
+            FilterScreen(navController)
+        }
     }
 }
