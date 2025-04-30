@@ -5,6 +5,7 @@ data class Course(
     val subject: String,          // Название предмета
     val weekDay: String,         // День недели (например, "Понедельник")
     val time: String,            // Время (например, "15:00-16:30")
-    val ageGroup: String,        // Возрастная группа (например, "7-9 лет")
-    val teacher: String          // ФИО преподавателя (например, "Иванова А.П.")
+    val ageGroup: String,
+    val teacher: String,         // ФИО преподавателя (например, "Иванова А.П.")
+    val studentsCount: Int       // Количество учеников в группе
 )

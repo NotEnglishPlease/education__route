@@ -23,12 +23,19 @@ fun LoginScreen(navController: NavController?) {
 
     val loginError by viewModel.loginError.collectAsState()
     val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val isTutor by viewModel.isTutor.collectAsState()
 
     // Переход при успешном входе
     LaunchedEffect(isLoggedIn) {
         if (isLoggedIn) {
-            navController?.navigate("main") {
-                popUpTo("login") { inclusive = true }
+            if (isTutor) {
+                navController?.navigate("tutor_courses") {
+                    popUpTo("login") { inclusive = true }
+                }
+            } else {
+                navController?.navigate("main") {
+                    popUpTo("login") { inclusive = true }
+                }
             }
         }
     }

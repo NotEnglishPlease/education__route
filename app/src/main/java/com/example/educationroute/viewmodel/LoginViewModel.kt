@@ -10,6 +10,9 @@ class LoginViewModel : ViewModel() {
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
+    private val _isTutor = MutableStateFlow(false)
+    val isTutor: StateFlow<Boolean> = _isTutor
+
     private val _loginError = MutableStateFlow<String?>(null)
     val loginError: StateFlow<String?> = _loginError
 
@@ -18,6 +21,7 @@ class LoginViewModel : ViewModel() {
             // Временная проверка - можно заменить на реальный API-вызов
             if (email.isValidEmail() && password.length >= 8) {
                 _isLoggedIn.value = true
+                _isTutor.value = email == "tutor@gmail.com" && password == "12345678"
                 _loginError.value = null
             } else {
                 _loginError.value = "Некорректные данные для входа"
