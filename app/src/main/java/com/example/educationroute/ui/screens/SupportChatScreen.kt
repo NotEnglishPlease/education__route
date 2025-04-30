@@ -21,6 +21,7 @@ import java.util.*
 @Composable
 fun SupportChatScreen() {
     var messageText by remember { mutableStateOf("") }
+    var showEmptyMessageError by remember { mutableStateOf(false) } // Флаг ошибки
     val messages = remember {
         mutableStateListOf(
             ChatMessage(
@@ -55,6 +56,16 @@ fun SupportChatScreen() {
             }
         }
 
+        // Сообщение об ошибке
+        if (showEmptyMessageError) {
+            Text(
+                text = stringResource(R.string.empty_message_error),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.padding(start = 16.dp, bottom = 4.dp)
+            )
+        }
+
         // Поле ввода сообщения
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -62,14 +73,21 @@ fun SupportChatScreen() {
         ) {
             OutlinedTextField(
                 value = messageText,
-                onValueChange = { messageText = it },
+                onValueChange = {
+                    messageText = it
+                    if (showEmptyMessageError && it.isNotBlank()) {
+                        showEmptyMessageError = false
+                    }
+                },
                 modifier = Modifier.weight(1f),
                 placeholder = { Text(stringResource(R.string.type_message)) },
                 singleLine = true,
                 shape = RoundedCornerShape(24.dp),
+                isError = showEmptyMessageError,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    errorContainerColor = MaterialTheme.colorScheme.errorContainer
                 )
             )
 
@@ -85,6 +103,9 @@ fun SupportChatScreen() {
                             )
                         )
                         messageText = ""
+                        showEmptyMessageError = false
+                    } else {
+                        showEmptyMessageError = true
                     }
                 },
                 modifier = Modifier.padding(start = 8.dp)

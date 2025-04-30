@@ -52,4 +52,8 @@ class CourseViewModel : ViewModel() {
         // Логика отписки от курса
         _enrolledCourses.value = _enrolledCourses.value.filter { it.id != courseId }
     }
+
+    fun removeCourse(courseId: Int) {
+        _availableCourses.value = _availableCourses.value.filter { it.id != courseId }
+    }
 }

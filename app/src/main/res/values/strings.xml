@@ -49,4 +49,5 @@
 
     <!-- Чат поддержки -->
     <string name="support_chat">Чат поддержки</string>
+    <string name="empty_message_error">Сообщение не может быть пустым</string>
 </resources>

@@ -1,38 +1,13 @@
 package com.example.educationroute.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TimePicker
-import androidx.compose.material3.TimePickerDefaults
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -50,7 +25,7 @@ fun FilterScreen(navController: NavController) {
     val weekDays = listOf(
         "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"
     )
-    
+
     var selectedSubject by remember { mutableStateOf("") }
     var age by remember { mutableStateOf("") }
     var selectedDays by remember { mutableStateOf(setOf<String>()) }
@@ -58,19 +33,22 @@ fun FilterScreen(navController: NavController) {
     var endTime by remember { mutableStateOf(LocalTime.of(16, 30)) }
     var showStartTimePicker by remember { mutableStateOf(false) }
     var showEndTimePicker by remember { mutableStateOf(false) }
-    
+
+    var showAgeError by remember { mutableStateOf(false) }
+    var showTimeError by remember { mutableStateOf(false) }
+
     val startTimePickerState = rememberTimePickerState(
         initialHour = startTime.hour,
         initialMinute = startTime.minute,
         is24Hour = true
     )
-    
+
     val endTimePickerState = rememberTimePickerState(
         initialHour = endTime.hour,
         initialMinute = endTime.minute,
         is24Hour = true
     )
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -84,7 +62,16 @@ fun FilterScreen(navController: NavController) {
                     }
                 },
                 actions = {
-                    TextButton(onClick = { /* Применить фильтры */ }) {
+                    TextButton(onClick = {
+                        val ageInt = age.toIntOrNull()
+                        showAgeError = ageInt == null || ageInt !in 7..17
+                        showTimeError = startTime.isBefore(LocalTime.of(15, 0)) ||
+                                endTime != startTime.plusMinutes(90)
+
+                        if (!showAgeError && !showTimeError) {
+                            navController.popBackStack()
+                        }
+                    }) {
                         Text("Применить")
                     }
                 }
@@ -125,21 +112,28 @@ fun FilterScreen(navController: NavController) {
                 }
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
-            
+
             item {
                 Text("Возраст", style = MaterialTheme.typography.titleMedium)
                 OutlinedTextField(
                     value = age,
-                    onValueChange = { newValue ->
-                        age = newValue 
-                    },
+                    onValueChange = { newValue -> age = newValue },
                     label = { Text("От 7 до 17 лет") },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    isError = showAgeError
                 )
+                if (showAgeError) {
+                    Text(
+                        text = "Возраст должен быть от 7 до 17 лет",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
-            
+
             item {
                 Text("День недели", style = MaterialTheme.typography.titleMedium)
                 Column {
@@ -169,7 +163,7 @@ fun FilterScreen(navController: NavController) {
                 }
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
-            
+
             item {
                 Text("Время начала", style = MaterialTheme.typography.titleMedium)
                 Button(
@@ -178,7 +172,7 @@ fun FilterScreen(navController: NavController) {
                 ) {
                     Text("${startTime.hour.toString().padStart(2, '0')}:${startTime.minute.toString().padStart(2, '0')}")
                 }
-                
+
                 if (showStartTimePicker) {
                     AlertDialog(
                         onDismissRequest = { showStartTimePicker = false },
@@ -211,7 +205,7 @@ fun FilterScreen(navController: NavController) {
                 }
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
             }
-            
+
             item {
                 Text("Время окончания", style = MaterialTheme.typography.titleMedium)
                 Button(
@@ -220,7 +214,7 @@ fun FilterScreen(navController: NavController) {
                 ) {
                     Text("${endTime.hour.toString().padStart(2, '0')}:${endTime.minute.toString().padStart(2, '0')}")
                 }
-                
+
                 if (showEndTimePicker) {
                     AlertDialog(
                         onDismissRequest = { showEndTimePicker = false },
@@ -251,7 +245,16 @@ fun FilterScreen(navController: NavController) {
                         }
                     )
                 }
+
+                if (showTimeError) {
+                    Text(
+                        text = "Занятие должно начинаться не ранее 15:00 и длиться 1.5 часа",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
         }
     }
-} 
+}

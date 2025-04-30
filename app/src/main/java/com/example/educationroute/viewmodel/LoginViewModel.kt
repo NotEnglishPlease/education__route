@@ -7,27 +7,27 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val _email = MutableStateFlow("")
-    val email: StateFlow<String> = _email
-
-    private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password
-
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn
 
-    fun updateEmail(newEmail: String) {
-        _email.value = newEmail
-    }
+    private val _loginError = MutableStateFlow<String?>(null)
+    val loginError: StateFlow<String?> = _loginError
 
-    fun updatePassword(newPassword: String) {
-        _password.value = newPassword
-    }
-
-    fun login() {
+    fun login(email: String, password: String) {
         viewModelScope.launch {
-            // TODO: Добавить вызов API для проверки учетных данных
-            _isLoggedIn.value = true // Симулируем успешный вход
+            // Временная проверка - можно заменить на реальный API-вызов
+            if (email.isValidEmail() && password.length >= 8) {
+                _isLoggedIn.value = true
+                _loginError.value = null
+            } else {
+                _loginError.value = "Некорректные данные для входа"
+            }
         }
     }
+}
+
+// Функция расширения для проверки email
+private fun String.isValidEmail(): Boolean {
+    val emailRegex = Regex("^[A-Za-z](.*)([@]{1})(.{1,})(\\.)(.{1,})")
+    return matches(emailRegex)
 }

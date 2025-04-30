@@ -73,7 +73,10 @@ fun AvailableCoursesScreen(navController: NavController) {
             items(courses) { course ->
                 CourseCard(
                     course = course,
-                    onEnrollClick = { viewModel.enrollToCourse(course.id) }
+                    onEnrollClick = {
+                        viewModel.enrollToCourse(course.id)
+                        viewModel.removeCourse(course.id) // Добавляем удаление курса
+                    }
                 )
             }
         }
