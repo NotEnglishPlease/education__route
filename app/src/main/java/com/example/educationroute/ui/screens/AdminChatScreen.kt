@@ -10,18 +10,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.compose.rememberNavController
 import com.example.educationroute.R
 import com.example.educationroute.data.ChatMessage
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
-fun SupportChatScreen() {
+fun AdminChatScreen() {
     var messageText by remember { mutableStateOf("") }
-    var showEmptyMessageError by remember { mutableStateOf(false) } // Флаг ошибки
+    var showEmptyMessageError by remember { mutableStateOf(false) }
     val messages = remember {
         mutableStateListOf(
             ChatMessage(
@@ -33,22 +33,15 @@ fun SupportChatScreen() {
         )
     }
 
-    Scaffold { paddingValues ->
+    Scaffold(
+        bottomBar = { AdminBottomNavigation(navController = rememberNavController()) }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
         ) {
-            // Заголовок чата
-            Text(
-                text = stringResource(R.string.support_chat),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier
-                    .padding(top = 32.dp, bottom = 16.dp)
-            )
-
             // Список сообщений
             LazyColumn(
                 modifier = Modifier.weight(1f),
@@ -72,9 +65,7 @@ fun SupportChatScreen() {
 
             // Поле ввода сообщения
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(
@@ -125,46 +116,4 @@ fun SupportChatScreen() {
             }
         }
     }
-}
-
-@Composable
-fun MessageBubble(message: ChatMessage) {
-    val bubbleColor = if (message.isFromUser) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant
-    }
-
-    val textColor = if (message.isFromUser) {
-        MaterialTheme.colorScheme.onPrimary
-    } else {
-        MaterialTheme.colorScheme.onSurface
-    }
-
-    Box(
-        modifier = Modifier.fillMaxWidth(),
-        contentAlignment = if (message.isFromUser) Alignment.CenterEnd else Alignment.CenterStart
-    ) {
-        Surface(
-            color = bubbleColor,
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.widthIn(max = 300.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Text(
-                    text = message.text,
-                    color = textColor,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = message.formattedTime(),
-                    color = textColor.copy(alpha = 0.7f),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.align(Alignment.End)
-                )
-            }
-        }
-    }
-}
+} 

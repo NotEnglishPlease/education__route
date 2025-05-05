@@ -10,57 +10,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.educationroute.viewmodel.LoginViewModel
 
 @Composable
-fun LoginScreen(navController: NavController?) {
+fun LoginScreen(navController: NavController) {
     val viewModel: LoginViewModel = viewModel()
-
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
-
-    val loginError by viewModel.loginError.collectAsState()
-    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
+    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val isError by viewModel.isError.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
     val isTutor by viewModel.isTutor.collectAsState()
-
-    // Переход при успешном входе
-    LaunchedEffect(isLoggedIn) {
-        if (isLoggedIn) {
-            if (isTutor) {
-                navController?.navigate("tutor_courses") {
-                    popUpTo("login") { inclusive = true }
-                }
-            } else {
-                navController?.navigate("main") {
-                    popUpTo("login") { inclusive = true }
-                }
-            }
-        }
-    }
-
-    fun validateInputs(): Boolean {
-        emailError = when {
-            email.isBlank() -> "Введите email"
-            !email.isValidEmail() -> "Некорректный формат email"
-            else -> null
-        }
-
-        passwordError = when {
-            password.isBlank() -> "Введите пароль"
-            password.length < 8 -> "Пароль должен содержать минимум 8 символов"
-            else -> null
-        }
-
-        return emailError == null && passwordError == null
-    }
-
-    fun handleLogin() {
-        if (validateInputs()) {
-            viewModel.login(email, password)
-        }
-    }
+    val isAdmin by viewModel.isAdmin.collectAsState()
 
     Surface {
         Column(
@@ -70,75 +31,65 @@ fun LoginScreen(navController: NavController?) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Вход", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Вход",
+            style = MaterialTheme.typography.headlineMedium
+        )
+        Spacer(modifier = Modifier.height(32.dp))
 
-            Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = email,
+            onValueChange = viewModel::onEmailChange,
+            label = { Text("Email") },
+            isError = isError
+        )
+        Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = {
-                    email = it
-                    emailError = null
-                },
-                label = { Text("Email") },
-                isError = emailError != null,
-                supportingText = {
-                    emailError?.let { error ->
-                        Text(text = error)
+        OutlinedTextField(
+            value = password,
+            onValueChange = viewModel::onPasswordChange,
+            label = { Text("Пароль") },
+            visualTransformation = PasswordVisualTransformation(),
+            isError = isError
+        )
+
+        if (isError) {
+            Text(
+                text = errorMessage,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                if (viewModel.login()) {
+                    when {
+                        isAdmin -> navController.navigate("admin_schedule")
+                        isTutor -> navController.navigate("tutor_courses")
+                        else -> navController.navigate("main")
                     }
                 }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = password,
-                onValueChange = {
-                    password = it
-                    passwordError = null
-                },
-                label = { Text("Пароль") },
-                visualTransformation = PasswordVisualTransformation(),
-                isError = passwordError != null,
-                supportingText = {
-                    passwordError?.let { error ->
-                        Text(text = error)
-                    }
-                }
-            )
-
-            // Общая ошибка авторизации
-            loginError?.let { error ->
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error
-                )
             }
+        ) {
+            Text("Войти")
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { handleLogin() }
-            ) {
-                Text("Войти")
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Нет аккаунта?")
                 Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = {
-                    navController?.navigate("register") {
-                        popUpTo("login") { inclusive = true }
-                    }
-                }) {
-                    Text("Регистрация")
+                TextButton(
+                    onClick = { navController.navigate("register") }
+                ) {
+                    Text("Зарегистрироваться")
                 }
             }
-        }
     }
+        }
 }
 
 // Функция расширения для Compose
@@ -147,8 +98,10 @@ private fun String.isValidEmail(): Boolean {
     return matches(emailRegex)
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun LoginScreenPreview() {
-    LoginScreen(navController = null)
+    MaterialTheme {
+        LoginScreen(navController = rememberNavController())
+    }
 }
