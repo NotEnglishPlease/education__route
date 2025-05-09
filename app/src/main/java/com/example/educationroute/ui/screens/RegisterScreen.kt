@@ -1,6 +1,8 @@
 package com.example.educationroute.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -10,81 +12,130 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.educationroute.viewmodel.RegisterViewModel
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun RegisterScreen(navController: NavController?) {
     val viewModel: RegisterViewModel = viewModel()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
+    val parentName by viewModel.parentName.collectAsState()
+    val email by viewModel.email.collectAsState()
+    val phone by viewModel.phone.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val childName by viewModel.childName.collectAsState()
+    val childBirthday by viewModel.childBirthday.collectAsState()
 
     val isRegistered by viewModel.isRegistered.collectAsState()
+    val error by viewModel.error.collectAsState()
 
-    // Переход на MainScreen при успешной регистрации
     LaunchedEffect(isRegistered) {
         if (isRegistered) {
             navController?.navigate("main") {
-                popUpTo("register") { inclusive = true } // Удаляем экран регистрации из стека навигации
+                popUpTo("register") { inclusive = true }
             }
         }
     }
 
-    Surface {
+    Scaffold { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
+                .padding(paddingValues)
+                .padding(16.dp)
+                .padding(top = 48.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(text = "Регистрация", style = MaterialTheme.typography.headlineMedium)
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Данные родителя
+            Text(text = "Данные родителя", style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") }
+                value = parentName,
+                onValueChange = {
+                    viewModel.updateParentName(it)
+                },
+                label = { Text("ФИО родителя") },
+                modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Данные ребенка
+            Text(text = "Данные ребенка", style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = childName,
+                onValueChange = {
+                    viewModel.updateChildName(it)
+                },
+                label = { Text("ФИО ребенка") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = childBirthday,
+                onValueChange = {
+                    viewModel.updateChildBirthday(it)
+                },
+                label = { Text("Дата рождения ребенка (ДД.ММ.ГГГГ)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Контактные данные
+            Text(text = "Контактные данные", style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    viewModel.updateEmail(it)
+                },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = phone,
+                onValueChange = {
+                    viewModel.updatePhone(it)
+                },
+                label = { Text("Телефон") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
             OutlinedTextField(
                 value = password,
-                onValueChange = { password = it },
-                label = { Text("Пароль") }
+                onValueChange = {
+                    viewModel.updatePassword(it)
+                },
+                label = { Text("Пароль") },
+                modifier = Modifier.fillMaxWidth()
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
-            OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Подтвердите пароль") }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(onClick = { viewModel.register() }) {
-                Text("Зарегистрироваться")
+            if (error != null) {
+                Text(text = error ?: "", color = MaterialTheme.colorScheme.error)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Button(
+                onClick = {
+                    viewModel.register()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Зарегистрироваться")
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Уже есть аккаунт?")
                 Spacer(modifier = Modifier.width(8.dp))
-                TextButton(onClick = { navController?.navigate("login") {
-                    popUpTo("register") { inclusive = true }
-                } }) {
+                TextButton(onClick = { 
+                    navController?.navigate("login") {
+                        popUpTo("register") { inclusive = true }
+                    }
+                }) {
                     Text("Войти")
                 }
             }
         }
-
     }
 }
-
 
 @Preview
 @Composable

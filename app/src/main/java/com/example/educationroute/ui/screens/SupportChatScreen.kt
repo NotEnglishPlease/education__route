@@ -38,7 +38,7 @@ fun SupportChatScreen() {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(8.dp)
         ) {
             // Заголовок чата
             Text(
@@ -46,14 +46,14 @@ fun SupportChatScreen() {
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier
-                    .padding(top = 32.dp, bottom = 16.dp)
+                    .padding(top = 4.dp, bottom = 4.dp)
             )
 
             // Список сообщений
             LazyColumn(
                 modifier = Modifier.weight(1f),
                 reverseLayout = true,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 items(messages.reversed()) { message ->
                     MessageBubble(message = message)
@@ -74,7 +74,7 @@ fun SupportChatScreen() {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                    .padding(bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 OutlinedTextField(

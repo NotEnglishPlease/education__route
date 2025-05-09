@@ -82,23 +82,10 @@ fun PaymentScreen(navController: NavController?, viewModel: PaymentViewModel = v
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(text = "$totalPrice ₽", style = MaterialTheme.typography.headlineMedium)
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Button(
-                onClick = { viewModel.pay() },
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("Оплатить")
-            }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
         Divider()
         Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = { /* TODO: Реализовать получение чека */ }, modifier = Modifier.padding(top = 8.dp)) {
-            Text("Получить чек о предыдущей оплате")
-        }
     }
 }

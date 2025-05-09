@@ -1,15 +1,19 @@
 package com.example.educationroute.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.educationroute.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val _email = MutableStateFlow("")
+    private val _email = MutableStateFlow("test@test.com")
     val email: StateFlow<String> = _email.asStateFlow()
 
-    private val _password = MutableStateFlow("")
+    private val _password = MutableStateFlow("1234")
     val password: StateFlow<String> = _password.asStateFlow()
 
     private val _isError = MutableStateFlow(false)
@@ -24,8 +28,8 @@ class LoginViewModel : ViewModel() {
     private val _isAdmin = MutableStateFlow(false)
     val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
 
-    private val _isLoggedIn = MutableStateFlow(false)
-    val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
+    private val _isLoginSuccessful = MutableStateFlow(false)
+    val isLoginSuccessful: StateFlow<Boolean> = _isLoginSuccessful.asStateFlow()
 
     fun onEmailChange(newEmail: String) {
         _email.value = newEmail
@@ -35,12 +39,19 @@ class LoginViewModel : ViewModel() {
         _password.value = newPassword
     }
 
-    fun login(): Boolean {
+    fun login() {
         // Проверяем заполненность полей
         if (_email.value.isEmpty() || _password.value.isEmpty()) {
             _isError.value = true
             _errorMessage.value = "Пожалуйста, заполните все поля"
-            return false
+            return
+        }
+
+        // Проверяем валидность email
+        if (!_email.value.isValidEmail()) {
+            _isError.value = true
+            _errorMessage.value = "Неверный формат email"
+            return
         }
 
         // Сбрасываем состояния перед проверкой
@@ -48,32 +59,44 @@ class LoginViewModel : ViewModel() {
         _errorMessage.value = ""
         _isTutor.value = false
         _isAdmin.value = false
-        _isLoggedIn.value = false
+        _isLoginSuccessful.value = false
 
-        // Проверка на роль администратора
-        if (_email.value == "admin@gmail.com" && _password.value == "12345678") {
-            _isAdmin.value = true
-            _isLoggedIn.value = true
-            return true
+        viewModelScope.launch {
+            Log.d("DEBUG_DEBUG", "login attempt with email: ${_email.value}")
+            try {
+                val response = RetrofitInstance.api.login(
+                    email = _email.value,
+                    password = _password.value
+                )
+                Log.d("DEBUG_DEBUG", "response code: ${response.code()}")
+                Log.d("DEBUG_DEBUG", "response message: ${response.message()}")
+
+                if (response.isSuccessful) {
+                    val loginResponse = response.body()
+                    Log.d("DEBUG_DEBUG", "login response: $loginResponse")
+                    if (loginResponse?.success == true) {
+                        when (loginResponse.role) {
+                            "admin" -> _isAdmin.value = true
+                            "tutor" -> _isTutor.value = true
+                        }
+                        _isLoginSuccessful.value = true
+                        _errorMessage.value = ""
+                    } else {
+                        _isError.value = true
+                        _errorMessage.value = loginResponse?.message ?: "Ошибка входа"
+                    }
+                } else {
+                    _isError.value = true
+                    val error = response.errorBody()?.string()
+                    Log.d("DEBUG_DEBUG", "login error body: $error")
+                    _errorMessage.value = error ?: "Ошибка сервера"
+                }
+            } catch (e: Exception) {
+                _isError.value = true
+                Log.e("DEBUG_DEBUG", "login exception", e)
+                _errorMessage.value = "Ошибка подключения к серверу: ${e.message}"
+            }
         }
-
-        // Проверка на роль преподавателя
-        if (_email.value == "tutor@gmail.com" && _password.value == "12345678") {
-            _isTutor.value = true
-            _isLoggedIn.value = true
-            return true
-        }
-
-        // Проверка на роль ученика
-        if (_email.value == "student@gmail.com" && _password.value == "12345678") {
-            _isLoggedIn.value = true
-            return true
-        }
-
-        // Если ни одна проверка не прошла
-        _isError.value = true
-        _errorMessage.value = "Неверный email или пароль"
-        return false
     }
 
     fun resetState() {
@@ -83,7 +106,7 @@ class LoginViewModel : ViewModel() {
         _errorMessage.value = ""
         _isTutor.value = false
         _isAdmin.value = false
-        _isLoggedIn.value = false
+        _isLoginSuccessful.value = false
     }
 }
 

@@ -22,6 +22,19 @@ fun LoginScreen(navController: NavController) {
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isTutor by viewModel.isTutor.collectAsState()
     val isAdmin by viewModel.isAdmin.collectAsState()
+    val isLoginSuccessful by viewModel.isLoginSuccessful.collectAsState()
+
+    var isLoading by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isLoginSuccessful) {
+        if (isLoginSuccessful) {
+            when {
+                isAdmin -> navController.navigate("admin_schedule")
+                isTutor -> navController.navigate("tutor_courses")
+                else -> navController.navigate("main")
+            }
+        }
+    }
 
     Surface {
         Column(
@@ -31,65 +44,72 @@ fun LoginScreen(navController: NavController) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-        Text(
-            text = "Вход",
-            style = MaterialTheme.typography.headlineMedium
-        )
-        Spacer(modifier = Modifier.height(32.dp))
-
-        OutlinedTextField(
-            value = email,
-            onValueChange = viewModel::onEmailChange,
-            label = { Text("Email") },
-            isError = isError
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = password,
-            onValueChange = viewModel::onPasswordChange,
-            label = { Text("Пароль") },
-            visualTransformation = PasswordVisualTransformation(),
-            isError = isError
-        )
-
-        if (isError) {
             Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 8.dp)
+                text = "Вход",
+                style = MaterialTheme.typography.headlineMedium
             )
-        }
+            Spacer(modifier = Modifier.height(32.dp))
 
-        Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = email,
+                onValueChange = viewModel::onEmailChange,
+                label = { Text("Email") },
+                isError = isError,
+                enabled = !isLoading
+            )
+            Spacer(modifier = Modifier.height(8.dp))
 
-        Button(
-            onClick = {
-                if (viewModel.login()) {
-                    when {
-                        isAdmin -> navController.navigate("admin_schedule")
-                        isTutor -> navController.navigate("tutor_courses")
-                        else -> navController.navigate("main")
-                    }
+            OutlinedTextField(
+                value = password,
+                onValueChange = viewModel::onPasswordChange,
+                label = { Text("Пароль") },
+                visualTransformation = PasswordVisualTransformation(),
+                isError = isError,
+                enabled = !isLoading
+            )
+
+            if (isError) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = {
+                    isLoading = true
+                    viewModel.login()
+                    isLoading = false
+                },
+                enabled = !isLoading
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Войти")
                 }
             }
-        ) {
-            Text("Войти")
-        }
 
-        Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(text = "Нет аккаунта?")
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
-                    onClick = { navController.navigate("register") }
+                    onClick = { navController.navigate("register") },
+                    enabled = !isLoading
                 ) {
                     Text("Зарегистрироваться")
                 }
             }
-    }
         }
+    }
 }
 
 // Функция расширения для Compose
