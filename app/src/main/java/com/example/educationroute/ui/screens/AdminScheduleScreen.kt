@@ -16,12 +16,28 @@ import com.example.educationroute.model.LessonDTO
 import com.example.educationroute.model.EmployeeDTO
 import com.example.educationroute.network.RetrofitInstance
 
+// Функция для определения порядка дней недели
+private fun getDayOrder(day: String): Int {
+    return when (day) {
+        "Понедельник" -> 1
+        "Вторник" -> 2
+        "Среда" -> 3
+        "Четверг" -> 4
+        "Пятница" -> 5
+        "Суббота" -> 6
+        else -> 7
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScheduleScreen(navController: NavController) {
     val lessonsState = produceState<List<LessonDTO>>(initialValue = emptyList()) {
         value = try {
-            RetrofitInstance.api.getLessons()
+            RetrofitInstance.api.getLessons().sortedWith(compareBy(
+                { getDayOrder(it.weekDay) },
+                { it.time.split("-")[0] }
+            ))
         } catch (e: Exception) {
             emptyList()
         }
