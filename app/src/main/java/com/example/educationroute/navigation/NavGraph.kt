@@ -1,7 +1,9 @@
 package com.example.educationroute.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.navigation.NavHost
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +17,13 @@ import com.example.educationroute.data.Student
 import com.example.educationroute.data.StudentGrade
 import com.example.educationroute.ui.screens.*
 import com.example.educationroute.viewmodel.RegisterViewModel
+import com.example.educationroute.model.LessonDTO
+import com.example.educationroute.network.RetrofitInstance
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 
 @Composable
 fun NavGraph() {
@@ -39,29 +48,6 @@ fun NavGraph() {
         }
         composable("admin_schedule") {
             AdminScheduleScreen(navController = navController)
-        }
-        composable("admin_chats") {
-            AdminChatsScreen(navController = navController)
-        }
-        composable(
-            route = "client_chat/{parentName}/{studentName}/{paidLessons}/{lessonsPerWeek}",
-            arguments = listOf(
-                navArgument("parentName") { type = NavType.StringType },
-                navArgument("studentName") { type = NavType.StringType },
-                navArgument("paidLessons") { type = NavType.IntType },
-                navArgument("lessonsPerWeek") { type = NavType.IntType }
-            )
-        ) { backStackEntry ->
-            val parentName = backStackEntry.arguments?.getString("parentName") ?: ""
-            val studentName = backStackEntry.arguments?.getString("studentName") ?: ""
-            val paidLessons = backStackEntry.arguments?.getInt("paidLessons") ?: 0
-            val lessonsPerWeek = backStackEntry.arguments?.getInt("lessonsPerWeek") ?: 0
-            ClientChatScreen(
-                parentName = parentName,
-                studentName = studentName,
-                paidLessons = paidLessons,
-                lessonsPerWeek = lessonsPerWeek
-            )
         }
         composable(
             route = "conduct_lesson/{courseId}",
@@ -89,21 +75,65 @@ fun NavGraph() {
             )
         ) { backStackEntry ->
             val lessonId = backStackEntry.arguments?.getString("lessonId")
-            // TODO: Получить данные занятия по ID
-            val lesson = EditLesson(
-                subject = "Математика",
-                ageGroup = "7-9 лет",
-                weekDay = "Понедельник",
-                startTime = "10:00",
-                endTime = "11:30",
-                tutor = "Иванов И.И.",
-                students = listOf(
-                    Student(1, "Петров Петр", true),
-                    Student(2, "Иванов Иван", true),
-                    Student(3, "Сидорова Анна", false)
-                )
-            )
-            EditLessonScreen(navController = navController, lesson = lesson)
+            val lesson = remember { mutableStateOf<LessonDTO?>(null) }
+            val isLoading = remember { mutableStateOf(true) }
+            
+            LaunchedEffect(lessonId) {
+                isLoading.value = true
+                try {
+                    if (lessonId != "new") {
+                        lesson.value = RetrofitInstance.api.getLessonById(lessonId?.toIntOrNull() ?: 0)
+                    }
+                } catch (_: Exception) {}
+                isLoading.value = false
+            }
+            
+            if (isLoading.value) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                val editLesson = if (lessonId == "new") {
+                    EditLesson(
+                        id = null,
+                        subject = "",
+                        ageGroup = "",
+                        weekDay = "",
+                        startTime = "",
+                        endTime = "",
+                        tutor = "",
+                        students = emptyList()
+                    )
+                } else {
+                    val existingLesson = lesson.value
+                    if (existingLesson != null) {
+                        val timeParts = existingLesson.time.split("-")
+                        EditLesson(
+                            id = existingLesson.id,
+                            subject = existingLesson.subject,
+                            ageGroup = existingLesson.ageLevel.toString(),
+                            weekDay = existingLesson.weekDay,
+                            startTime = timeParts.getOrNull(0)?.replace(":", "") ?: "",
+                            endTime = timeParts.getOrNull(1)?.replace(":", "") ?: "",
+                            tutor = "", // Будет заполнено в EditLessonScreen
+                            students = emptyList() // TODO: Добавить получение списка студентов
+                        )
+                    } else {
+                        EditLesson(
+                            id = lessonId?.toIntOrNull() ?: 0,
+                            subject = "",
+                            ageGroup = "",
+                            weekDay = "",
+                            startTime = "",
+                            endTime = "",
+                            tutor = "",
+                            students = emptyList()
+                        )
+                    }
+                }
+                
+                EditLessonScreen(navController = navController, lesson = editLesson)
+            }
         }
     }
 }

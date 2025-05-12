@@ -1,6 +1,7 @@
 package com.example.educationroute.data
 
 data class EditLesson(
+    val id: Int? = null,
     val subject: String,
     val ageGroup: String,
     val weekDay: String,

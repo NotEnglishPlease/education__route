@@ -5,44 +5,43 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.educationroute.data.Course
-import com.example.educationroute.data.Lesson
+import com.example.educationroute.model.LessonDTO
+import com.example.educationroute.model.EmployeeDTO
+import com.example.educationroute.network.RetrofitInstance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScheduleScreen(navController: NavController) {
-    // TODO: Получить список всех курсов из репозитория
-    val courses = remember {
-        listOf(
-            Course(
-                id = 1,
-                subject = "Математика",
-                weekDay = "Понедельник",
-                time = "15:00-16:30",
-                ageGroup = "7-9 лет",
-                teacher = "Иванова А.П.",
-                studentsCount = 12
-            ),
-            Course(
-                id = 2,
-                subject = "Русский язык",
-                weekDay = "Вторник",
-                time = "14:00-15:30",
-                ageGroup = "10-12 лет",
-                teacher = "Петрова С.И.",
-                studentsCount = 15
-            )
-        )
+    val lessonsState = produceState<List<LessonDTO>>(initialValue = emptyList()) {
+        value = try {
+            RetrofitInstance.api.getLessons()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    var employees by remember { mutableStateOf<List<EmployeeDTO>>(emptyList()) }
+    LaunchedEffect(Unit) {
+        try {
+            employees = RetrofitInstance.api.getEmployees()
+        } catch (_: Exception) {}
     }
 
     Scaffold(
-        bottomBar = { AdminBottomNavigation(navController = navController) }
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                navController.navigate("edit_lesson/new")
+            }) {
+                Icon(Icons.Filled.Add, contentDescription = "Добавить занятие")
+            }
+        }
     ) { paddingValues ->
         Surface(
             modifier = Modifier
@@ -56,88 +55,49 @@ fun AdminScheduleScreen(navController: NavController) {
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(courses) { course ->
-                    LessonCard(course = course, navController = navController)
+                items(lessonsState.value) { lesson ->
+                    val employeeName = employees.firstOrNull { it.id == lesson.employeeId }?.name ?: "Неизвестно"
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = lesson.subject,
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text(
+                                text = "${lesson.weekDay}, ${lesson.time}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Возрастная группа: ${lesson.ageLevel}",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                text = "Преподаватель: $employeeName",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = {
+                                    navController.navigate("edit_lesson/${lesson.id}") {
+                                        launchSingleTop = true
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Редактировать")
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
-
-@Composable
-fun LessonCard(course: Course, navController: NavController) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = course.subject,
-                style = MaterialTheme.typography.titleLarge
-            )
-            Text(
-                text = "${course.weekDay}, ${course.time}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Возрастная группа: ${course.ageGroup}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Преподаватель: ${course.teacher}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Количество учеников: ${course.studentsCount}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = {
-                    navController.navigate("edit_lesson/${course.id}") {
-                        launchSingleTop = true
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Редактировать")
-            }
-        }
-    }
-}
-
-// Временные данные для демонстрации
-private val lessons = listOf(
-    Course(
-        id = 1,
-        subject = "Математика",
-        weekDay = "Понедельник",
-        time = "15:00-16:30",
-        ageGroup = "7-9 лет",
-        teacher = "Иванова А.П.",
-        studentsCount = 12
-    ),
-    Course(
-        id = 2,
-        subject = "Физика",
-        weekDay = "Среда",
-        time = "16:00-17:30",
-        ageGroup = "10-12 лет",
-        teacher = "Иванова А.П.",
-        studentsCount = 8
-    ),
-    Course(
-        id = 3,
-        subject = "Информатика",
-        weekDay = "Пятница",
-        time = "17:00-18:30",
-        ageGroup = "13-15 лет",
-        teacher = "Иванова А.П.",
-        studentsCount = 10
-    )
-) 

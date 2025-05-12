@@ -63,9 +63,6 @@ fun MainScreen(navController: NavController?) {
             composable(BottomNavItem.Payment.route) {
                 PaymentScreen(navController = bottomNavController)
             }
-            composable(BottomNavItem.SupportChat.route) {
-                SupportChatScreen()
-            }
         }
     }
 }
@@ -93,18 +90,11 @@ sealed class BottomNavItem(
         label = "Оплата"
     )
 
-    object SupportChat : BottomNavItem(
-        route = "support_chat",
-        iconResId = R.drawable.ic_support_chat,
-        label = "Чат"
-    )
-
     companion object {
         fun values(): List<BottomNavItem> = listOf(
             AvailableCourses,
             MyCourses,
-            Payment,
-            SupportChat
+            Payment
         )
     }
 }
