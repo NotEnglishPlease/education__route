@@ -36,11 +36,6 @@ fun CourseCard(
                 )
 
                 Text(
-                    text = "Возраст: ${course.ageGroup}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Text(
                     text = "Преподаватель: ${course.teacher}",
                     style = MaterialTheme.typography.bodyMedium
                 )

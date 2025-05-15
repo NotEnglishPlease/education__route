@@ -1,5 +1,6 @@
 package com.example.educationroute.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -12,26 +13,52 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.educationroute.viewmodel.LoginViewModel
+import com.example.educationroute.viewmodel.MainViewModel
 
 @Composable
 fun LoginScreen(navController: NavController) {
-    val viewModel: LoginViewModel = viewModel()
-    val email by viewModel.email.collectAsState()
-    val password by viewModel.password.collectAsState()
-    val isError by viewModel.isError.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
-    val isTutor by viewModel.isTutor.collectAsState()
-    val isAdmin by viewModel.isAdmin.collectAsState()
-    val isLoginSuccessful by viewModel.isLoginSuccessful.collectAsState()
+    val loginViewModel: LoginViewModel = viewModel()
+    val mainViewModel: MainViewModel = viewModel(
+        key = "main_view_model",
+        factory = MainViewModel.Factory
+    )
+    val email by loginViewModel.email.collectAsState()
+    val password by loginViewModel.password.collectAsState()
+    val isError by loginViewModel.isError.collectAsState()
+    val errorMessage by loginViewModel.errorMessage.collectAsState()
+    val isTutor by loginViewModel.isTutor.collectAsState()
+    val isAdmin by loginViewModel.isAdmin.collectAsState()
+    val isLoginSuccessful by loginViewModel.isLoginSuccessful.collectAsState()
+    val clientId by loginViewModel.clientId.collectAsState()
 
     var isLoading by remember { mutableStateOf(false) }
 
     LaunchedEffect(isLoginSuccessful) {
         if (isLoginSuccessful) {
+            Log.d("LoginScreen", "Вход выполнен успешно")
+            Log.d("LoginScreen", "clientId: $clientId")
+            clientId?.let { id ->
+                Log.d("LoginScreen", "Перенаправление на главный экран с clientId: $id")
             when {
-                isAdmin -> navController.navigate("admin_main")
-                isTutor -> navController.navigate("tutor_courses")
-                else -> navController.navigate("main")
+                    isAdmin -> {
+                        Log.d("LoginScreen", "Перенаправление на админ-панель")
+                        navController.navigate("admin_main")
+                    }
+                    isTutor -> {
+                        Log.d("LoginScreen", "Перенаправление на панель преподавателя")
+                        navController.navigate("tutor_courses")
+                    }
+                    else -> {
+                        Log.d("LoginScreen", "Перенаправление на главный экран")
+                        mainViewModel.setClientId(id)
+                        Log.d("LoginScreen", "clientId установлен в MainViewModel: $id")
+                        navController.navigate("main") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
+                }
+            } ?: run {
+                Log.e("LoginScreen", "clientId равен null")
             }
         }
     }
@@ -52,7 +79,7 @@ fun LoginScreen(navController: NavController) {
 
             OutlinedTextField(
                 value = email,
-                onValueChange = viewModel::onEmailChange,
+                onValueChange = { loginViewModel.setEmail(it) },
                 label = { Text("Email") },
                 isError = isError,
                 enabled = !isLoading
@@ -61,7 +88,7 @@ fun LoginScreen(navController: NavController) {
 
             OutlinedTextField(
                 value = password,
-                onValueChange = viewModel::onPasswordChange,
+                onValueChange = { loginViewModel.setPassword(it) },
                 label = { Text("Пароль") },
                 visualTransformation = PasswordVisualTransformation(),
                 isError = isError,
@@ -70,7 +97,7 @@ fun LoginScreen(navController: NavController) {
 
             if (isError) {
                 Text(
-                    text = errorMessage,
+                    text = errorMessage ?: "",
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 8.dp)
                 )
@@ -81,7 +108,7 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     isLoading = true
-                    viewModel.login()
+                    loginViewModel.login()
                     isLoading = false
                 },
                 enabled = !isLoading
@@ -102,8 +129,9 @@ fun LoginScreen(navController: NavController) {
                 Text(text = "Нет аккаунта?")
                 Spacer(modifier = Modifier.width(8.dp))
                 TextButton(
-                    onClick = { navController.navigate("register") },
-                    enabled = !isLoading
+                    onClick = {
+                        navController.navigate("register")
+                    }
                 ) {
                     Text("Зарегистрироваться")
                 }

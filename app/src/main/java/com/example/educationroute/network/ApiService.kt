@@ -63,4 +63,7 @@ interface ApiService {
         @Path("id") id: Int,
         @Field("paid_lessons") paidLessons: Int
     ): Response<Unit>
+
+    @GET("lessons/available/{clientId}")
+    suspend fun getAvailableLessons(@Path("clientId") clientId: Int): Response<List<LessonDTO>>
 } 

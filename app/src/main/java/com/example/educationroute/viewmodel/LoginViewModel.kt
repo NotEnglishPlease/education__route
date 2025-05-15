@@ -6,107 +6,104 @@ import androidx.lifecycle.viewModelScope
 import com.example.educationroute.network.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
     private val _email = MutableStateFlow("")
-    val email: StateFlow<String> = _email.asStateFlow()
+    val email: StateFlow<String> = _email
 
     private val _password = MutableStateFlow("")
-    val password: StateFlow<String> = _password.asStateFlow()
+    val password: StateFlow<String> = _password
 
     private val _isError = MutableStateFlow(false)
-    val isError: StateFlow<Boolean> = _isError.asStateFlow()
+    val isError: StateFlow<Boolean> = _isError
 
-    private val _errorMessage = MutableStateFlow("")
-    val errorMessage: StateFlow<String> = _errorMessage.asStateFlow()
-
-    private val _isTutor = MutableStateFlow(false)
-    val isTutor: StateFlow<Boolean> = _isTutor.asStateFlow()
-
-    private val _isAdmin = MutableStateFlow(false)
-    val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage
 
     private val _isLoginSuccessful = MutableStateFlow(false)
-    val isLoginSuccessful: StateFlow<Boolean> = _isLoginSuccessful.asStateFlow()
+    val isLoginSuccessful: StateFlow<Boolean> = _isLoginSuccessful
 
-    fun onEmailChange(newEmail: String) {
-        _email.value = newEmail
+    private val _isTutor = MutableStateFlow(false)
+    val isTutor: StateFlow<Boolean> = _isTutor
+
+    private val _isAdmin = MutableStateFlow(false)
+    val isAdmin: StateFlow<Boolean> = _isAdmin
+
+    private val _clientId = MutableStateFlow<Int?>(null)
+    val clientId: StateFlow<Int?> = _clientId
+
+    fun setEmail(value: String) {
+        _email.value = value
     }
 
-    fun onPasswordChange(newPassword: String) {
-        _password.value = newPassword
+    fun setPassword(value: String) {
+        _password.value = value
     }
 
     fun login() {
-        // Проверяем заполненность полей
-        if (_email.value.isEmpty() || _password.value.isEmpty()) {
-            _isError.value = true
-            _errorMessage.value = "Пожалуйста, заполните все поля"
-            return
-        }
-
-        // Проверяем валидность email
-        if (!_email.value.isValidEmail()) {
-            _isError.value = true
-            _errorMessage.value = "Неверный формат email"
-            return
-        }
-
-        // Сбрасываем состояния перед проверкой
-        _isError.value = false
-        _errorMessage.value = ""
-        _isTutor.value = false
-        _isAdmin.value = false
-        _isLoginSuccessful.value = false
-
         viewModelScope.launch {
-            Log.d("DEBUG_DEBUG", "login attempt with email: ${_email.value}")
             try {
-                val response = RetrofitInstance.api.login(
-                    email = _email.value,
-                    password = _password.value
-                )
-                Log.d("DEBUG_DEBUG", "response code: ${response.code()}")
-                Log.d("DEBUG_DEBUG", "response message: ${response.message()}")
+                Log.d("LoginViewModel", "Начало входа в систему")
+                _isError.value = false
+                _errorMessage.value = null
+                _isLoginSuccessful.value = false
+                _isTutor.value = false
+                _isAdmin.value = false
+                _clientId.value = null
 
+                val response = RetrofitInstance.api.login(_email.value, _password.value)
+                Log.d("LoginViewModel", "Получен ответ от сервера: ${response.code()}")
+                
                 if (response.isSuccessful) {
                     val loginResponse = response.body()
-                    Log.d("DEBUG_DEBUG", "login response: $loginResponse")
+                    Log.d("LoginViewModel", "Ответ сервера: $loginResponse")
+                    
                     if (loginResponse?.success == true) {
                         when (loginResponse.role) {
-                            "admin" -> _isAdmin.value = true
-                            "tutor" -> _isTutor.value = true
+                            "admin" -> {
+                                Log.d("LoginViewModel", "Установка роли: admin")
+                                _isAdmin.value = true
+                            }
+                            "tutor" -> {
+                                Log.d("LoginViewModel", "Установка роли: tutor")
+                                _isTutor.value = true
+                            }
+                            "client" -> {
+                                Log.d("LoginViewModel", "Установка роли: client")
+                                loginResponse.client?.let { client ->
+                                    Log.d("LoginViewModel", "Установка clientId: ${client.id}")
+                                    _clientId.value = client.id
+                                }
+                            }
                         }
+                        Log.d("LoginViewModel", "Вход выполнен успешно")
                         _isLoginSuccessful.value = true
-                        _errorMessage.value = ""
                     } else {
-                        _isError.value = true
+                        Log.e("LoginViewModel", "Ошибка входа: ${loginResponse?.message}")
                         _errorMessage.value = loginResponse?.message ?: "Ошибка входа"
+                        _isError.value = true
                     }
                 } else {
+                    Log.e("LoginViewModel", "Ошибка сервера: ${response.code()}")
+                    _errorMessage.value = "Ошибка сервера: ${response.code()}"
                     _isError.value = true
-                    val error = response.errorBody()?.string()
-                    Log.d("DEBUG_DEBUG", "login error body: $error")
-                    _errorMessage.value = error ?: "Ошибка сервера"
                 }
             } catch (e: Exception) {
+                Log.e("LoginViewModel", "Исключение при входе", e)
+                _errorMessage.value = "Ошибка: ${e.message}"
                 _isError.value = true
-                Log.e("DEBUG_DEBUG", "login exception", e)
-                _errorMessage.value = "Ошибка подключения к серверу: ${e.message}"
             }
         }
     }
 
     fun resetState() {
-        _email.value = ""
-        _password.value = ""
         _isError.value = false
-        _errorMessage.value = ""
+        _errorMessage.value = null
+        _isLoginSuccessful.value = false
         _isTutor.value = false
         _isAdmin.value = false
-        _isLoginSuccessful.value = false
+        _clientId.value = null
     }
 }
 

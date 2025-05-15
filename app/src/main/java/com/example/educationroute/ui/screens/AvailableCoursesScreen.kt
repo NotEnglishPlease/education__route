@@ -7,38 +7,53 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.educationroute.R
 import com.example.educationroute.data.Course
 import com.example.educationroute.ui.components.CourseCard
 import com.example.educationroute.viewmodel.CourseViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AvailableCoursesScreen(navController: NavController) {
+fun AvailableCoursesScreen(
+    navController: NavController,
+    clientId: Int
+) {
     val viewModel: CourseViewModel = viewModel()
-    val courses = viewModel.availableCourses
-    val searchQuery = remember { mutableStateOf("") }
+    val courses = viewModel.filteredCourses
+    val searchQuery = viewModel.searchQuery
+    val isLoading = remember { mutableStateOf(true) }
+    val error = remember { mutableStateOf<String?>(null) }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // Search Bar с иконками
+    LaunchedEffect(clientId) {
+        try {
+            isLoading.value = true
+            error.value = null
+            viewModel.loadAvailableCourses(clientId)
+        } catch (e: Exception) {
+            error.value = "Ошибка загрузки курсов: ${e.message}"
+        } finally {
+            isLoading.value = false
+        }
+    }
+
+    Scaffold(
+        topBar = {
         SearchBar(
-            query = searchQuery.value,
-            onQueryChange = { searchQuery.value = it },
-            onSearch = { /* Логика поиска */ },
+                query = searchQuery,
+                onQueryChange = { viewModel.setSearchQuery(it) },
+                onSearch = { viewModel.setSearchQuery(it) },
             active = false,
             onActiveChange = {},
             modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Default.Search,
@@ -53,8 +68,37 @@ fun AvailableCoursesScreen(navController: NavController) {
                 containerColor = MaterialTheme.colorScheme.surfaceVariant
             )
         ) {}
-
-        // Список курсов
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when {
+                isLoading.value -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                error.value != null -> {
+                    Text(
+                        text = error.value ?: "Произошла ошибка",
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                courses.isEmpty() -> {
+                    Text(
+                        text = if (searchQuery.isBlank()) {
+                            "Нет доступных курсов для вашего возраста"
+                        } else {
+                            "Курсы не найдены"
+                        },
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+                else -> {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,6 +113,9 @@ fun AvailableCoursesScreen(navController: NavController) {
                         viewModel.removeCourse(course.id)
                     }
                 )
+                        }
+                    }
+                }
             }
         }
     }
