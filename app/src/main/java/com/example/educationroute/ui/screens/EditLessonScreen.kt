@@ -69,9 +69,21 @@ fun EditLessonScreen(navController: NavController, lesson: EditLesson) {
     LaunchedEffect(Unit) {
         try {
             employees = RetrofitInstance.api.getEmployees()
-            selectedEmployee = employees.firstOrNull { it.id == lesson.id } ?: employees.firstOrNull()
+            // Если это редактирование, находим преподавателя по ID
+            if (lesson.id != null) {
+                selectedEmployee = employees.firstOrNull { it.id == lesson.id }
+            }
             existingLessons = RetrofitInstance.api.getLessons()
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            println("Error loading employees: ${e.message}")
+        }
+    }
+
+    // Обновляем выбранного преподавателя при изменении предмета
+    LaunchedEffect(subject) {
+        if (subject.isNotBlank()) {
+            selectedEmployee = filteredEmployees.firstOrNull()
+        }
     }
 
     // Функция для фильтрации ввода времени
@@ -88,8 +100,10 @@ fun EditLessonScreen(navController: NavController, lesson: EditLesson) {
     }
 
     // Валидация для возраста
-    fun isValidAge(input: String): Boolean =
-        input.all { it.isDigit() } && input.isNotBlank()
+    fun isValidAge(input: String): Boolean {
+        val age = input.toIntOrNull() ?: return false
+        return age in 7..18
+    }
 
     // Визуальная маска для времени
     val timeVisualTransformation = VisualTransformation { text ->
@@ -167,19 +181,17 @@ fun EditLessonScreen(navController: NavController, lesson: EditLesson) {
         return hours * 60 + minutes
     }
 
-    // Проверка пересечения занятий
     fun hasTimeConflict(start: String, end: String, weekDay: String): Boolean {
         val startMinutes = timeToMinutes(start)
         val endMinutes = timeToMinutes(end)
         
         if (startMinutes == -1 || endMinutes == -1) return false
 
-        // Добавляем 10 минут перерыва
         val startWithBreak = startMinutes - 10
         val endWithBreak = endMinutes + 10
 
         return existingLessons
-            .filter { it.weekDay == weekDay && it.id != lesson.id } // Исключаем текущее занятие при редактировании
+            .filter { it.weekDay == weekDay && it.id != lesson.id }
             .any { existingLesson ->
                 val existingTime = existingLesson.time.split("-")
                 if (existingTime.size != 2) return@any false
@@ -189,7 +201,6 @@ fun EditLessonScreen(navController: NavController, lesson: EditLesson) {
                 
                 if (existingStart == -1 || existingEnd == -1) return@any false
 
-                // Проверяем пересечение с учетом перерыва
                 (startWithBreak < existingEnd && endWithBreak > existingStart)
             }
     }
@@ -203,6 +214,10 @@ fun EditLessonScreen(navController: NavController, lesson: EditLesson) {
             }
             ageGroup.isBlank() -> {
                 validationError = "Введите возрастную группу"
+                return false
+            }
+            !isValidAge(ageGroup) -> {
+                validationError = "Возрастная группа должна быть от 7 до 18 лет"
                 return false
             }
             weekDay.isBlank() -> {
@@ -429,9 +444,13 @@ fun EditLessonScreen(navController: NavController, lesson: EditLesson) {
                 )
                 OutlinedTextField(
                     value = ageGroup,
-                    onValueChange = { if (it.all { ch -> ch.isDigit() }) ageGroup = it },
+                    onValueChange = { 
+                        if (it.isEmpty() || (it.all { ch -> ch.isDigit() } && it.toIntOrNull() ?: 0 <= 18)) {
+                            ageGroup = it
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Возрастная группа (только число)") },
+                    label = { Text("Возрастная группа (от 7 до 18 лет)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 Divider(modifier = Modifier.padding(vertical = 8.dp))

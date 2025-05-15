@@ -4,14 +4,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.educationroute.R
 import com.example.educationroute.model.LessonDTO
 import com.example.educationroute.model.EmployeeDTO
 import com.example.educationroute.network.RetrofitInstance
@@ -51,65 +52,66 @@ fun AdminScheduleScreen(navController: NavController) {
     }
 
     Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Расписание") }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate("edit_lesson/new")
+                navController.navigate("edit_lesson/new") {
+                    launchSingleTop = true
+                }
             }) {
                 Icon(Icons.Filled.Add, contentDescription = "Добавить занятие")
             }
         }
     ) { paddingValues ->
-        Surface(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            color = MaterialTheme.colorScheme.background
+                .padding(horizontal = 16.dp)
+                .padding(top = paddingValues.calculateTopPadding()),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(lessonsState.value) { lesson ->
-                    val employeeName = employees.firstOrNull { it.id == lesson.employeeId }?.name ?: "Неизвестно"
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            items(lessonsState.value) { lesson ->
+                val employeeName = employees.firstOrNull { it.id == lesson.employeeId }?.name ?: "Неизвестно"
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        Text(
+                            text = lesson.subject,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = "${lesson.weekDay}, ${lesson.time}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "Возрастная группа: ${lesson.ageLevel}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Text(
+                            text = "Преподаватель: $employeeName",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = {
+                                navController.navigate("edit_lesson/${lesson.id}") {
+                                    launchSingleTop = true
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = lesson.subject,
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                            Text(
-                                text = "${lesson.weekDay}, ${lesson.time}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = "Возрастная группа: ${lesson.ageLevel}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Text(
-                                text = "Преподаватель: $employeeName",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = {
-                                    navController.navigate("edit_lesson/${lesson.id}") {
-                                        launchSingleTop = true
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text("Редактировать")
-                            }
+                            Text("Редактировать")
                         }
                     }
                 }

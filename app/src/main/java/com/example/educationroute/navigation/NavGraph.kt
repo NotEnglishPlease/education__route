@@ -40,14 +40,14 @@ fun NavGraph() {
         composable("main") {
             MainScreen(navController)
         }
+        composable("admin_main") {
+            AdminMainScreen(navController)
+        }
         composable("filters") {
             FilterScreen(navController)
         }
         composable("tutor_courses") {
             TutorCoursesScreen(navController)
-        }
-        composable("admin_schedule") {
-            AdminScheduleScreen(navController = navController)
         }
         composable(
             route = "conduct_lesson/{courseId}",
@@ -84,8 +84,11 @@ fun NavGraph() {
                     if (lessonId != "new") {
                         lesson.value = RetrofitInstance.api.getLessonById(lessonId?.toIntOrNull() ?: 0)
                     }
-                } catch (_: Exception) {}
-                isLoading.value = false
+                } catch (e: Exception) {
+                    println("Error loading lesson: ${e.message}")
+                } finally {
+                    isLoading.value = false
+                }
             }
             
             if (isLoading.value) {

@@ -10,10 +10,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
-    private val _email = MutableStateFlow("test@test.com")
+    private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email.asStateFlow()
 
-    private val _password = MutableStateFlow("1234")
+    private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password.asStateFlow()
 
     private val _isError = MutableStateFlow(false)

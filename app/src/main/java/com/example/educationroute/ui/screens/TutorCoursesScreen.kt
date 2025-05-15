@@ -94,27 +94,15 @@ fun TutorCoursesScreen(navController: NavController) {
                             style = MaterialTheme.typography.bodyMedium
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Button(
-                                onClick = { 
-                                    navController.navigate("conduct_lesson/${course.id}") {
-                                        launchSingleTop = true
-                                    }
+                        Button(
+                            onClick = { 
+                                navController.navigate("conduct_lesson/${course.id}") {
+                                    launchSingleTop = true
                                 }
-                            ) {
-                                Text("Провести")
-                            }
-                            Button(
-                                onClick = { /* Отменить занятие */ },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.error
-                                )
-                            ) {
-                                Text("Отменить")
-                            }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Провести")
                         }
                     }
                 }

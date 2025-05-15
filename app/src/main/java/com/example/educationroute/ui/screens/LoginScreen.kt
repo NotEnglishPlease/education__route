@@ -29,7 +29,7 @@ fun LoginScreen(navController: NavController) {
     LaunchedEffect(isLoginSuccessful) {
         if (isLoginSuccessful) {
             when {
-                isAdmin -> navController.navigate("admin_schedule")
+                isAdmin -> navController.navigate("admin_main")
                 isTutor -> navController.navigate("tutor_courses")
                 else -> navController.navigate("main")
             }

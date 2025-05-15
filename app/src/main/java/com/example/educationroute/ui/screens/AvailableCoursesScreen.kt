@@ -46,15 +46,6 @@ fun AvailableCoursesScreen(navController: NavController) {
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
-            trailingIcon = {
-                IconButton(onClick = { navController.navigate("filters") }) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_filter),
-                        contentDescription = "Фильтры",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            },
             placeholder = {
                 Text("Поиск курсов", color = MaterialTheme.colorScheme.onSurfaceVariant)
             },
@@ -75,7 +66,7 @@ fun AvailableCoursesScreen(navController: NavController) {
                     course = course,
                     onEnrollClick = {
                         viewModel.enrollToCourse(course.id)
-                        viewModel.removeCourse(course.id) // Добавляем удаление курса
+                        viewModel.removeCourse(course.id)
                     }
                 )
             }

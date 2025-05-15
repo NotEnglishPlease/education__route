@@ -3,6 +3,7 @@ package com.example.educationroute.network
 import com.example.educationroute.model.EmployeeDTO
 import com.example.educationroute.model.LoginResponse
 import com.example.educationroute.model.LessonDTO
+import com.example.educationroute.model.ClientDTO
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
@@ -52,4 +53,14 @@ interface ApiService {
 
     @GET("employees")
     suspend fun getEmployees(): List<EmployeeDTO>
+
+    @GET("clients")
+    suspend fun getClients(): List<ClientDTO>
+
+    @FormUrlEncoded
+    @PUT("clients/{id}/paid_lessons")
+    suspend fun updatePaidLessons(
+        @Path("id") id: Int,
+        @Field("paid_lessons") paidLessons: Int
+    ): Response<Unit>
 } 

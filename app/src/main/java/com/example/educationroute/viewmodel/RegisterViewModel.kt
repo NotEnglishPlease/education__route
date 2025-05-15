@@ -9,22 +9,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class RegisterViewModel : ViewModel() {
-    private val _parentName = MutableStateFlow("Иванов Иван Иванович")
+    private val _parentName = MutableStateFlow("")
     val parentName: StateFlow<String> = _parentName
 
-    private val _email = MutableStateFlow("test@test.com")
+    private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email
 
-    private val _phone = MutableStateFlow("+71231231212")
+    private val _phone = MutableStateFlow("")
     val phone: StateFlow<String> = _phone
 
-    private val _password = MutableStateFlow("1234")
+    private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password
 
-    private val _childName = MutableStateFlow("Иванов Иван Иванович")
+    private val _childName = MutableStateFlow("")
     val childName: StateFlow<String> = _childName
 
-    private val _childBirthday = MutableStateFlow("10.10.2018")
+    private val _childBirthday = MutableStateFlow("")
     val childBirthday: StateFlow<String> = _childBirthday
 
     private val _isRegistered = MutableStateFlow(false)
