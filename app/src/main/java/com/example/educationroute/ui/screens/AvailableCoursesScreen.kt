@@ -25,7 +25,10 @@ fun AvailableCoursesScreen(
     navController: NavController,
     clientId: Int
 ) {
-    val viewModel: CourseViewModel = viewModel()
+    val viewModel: CourseViewModel = viewModel(
+        key = "course_view_model",
+        factory = CourseViewModel.Factory
+    )
     val courses = viewModel.filteredCourses
     val searchQuery = viewModel.searchQuery
     val isLoading = remember { mutableStateOf(true) }
@@ -109,8 +112,16 @@ fun AvailableCoursesScreen(
                 CourseCard(
                     course = course,
                     onEnrollClick = {
-                        viewModel.enrollToCourse(course.id)
-                        viewModel.removeCourse(course.id)
+                        viewModel.enrollToCourse(
+                            clientId = clientId,
+                            lessonId = course.id,
+                            onSuccess = {
+                                viewModel.removeCourse(course.id)
+                            },
+                            onError = { err ->
+                                error.value = err
+                            }
+                        )
                     }
                 )
                         }

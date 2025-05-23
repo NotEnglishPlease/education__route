@@ -66,4 +66,22 @@ interface ApiService {
 
     @GET("lessons/available/{clientId}")
     suspend fun getAvailableLessons(@Path("clientId") clientId: Int): Response<List<LessonDTO>>
+
+    @FormUrlEncoded
+    @POST("enroll")
+    suspend fun enrollToCourse(
+        @Field("clientId") clientId: Int,
+        @Field("lessonId") lessonId: Int
+    ): Response<String>
+
+    @GET("my_courses/{clientId}")
+    suspend fun getMyCourses(
+        @Path("clientId") clientId: Int
+    ): Response<List<Map<String, Any?>>>
+
+    @DELETE("unenroll/{clientId}/{lessonId}")
+    suspend fun unenrollFromCourse(
+        @Path("clientId") clientId: Int,
+        @Path("lessonId") lessonId: Int
+    ): Response<Unit>
 } 
