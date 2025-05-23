@@ -41,6 +41,11 @@ class LoginViewModel : ViewModel() {
         _password.value = value
     }
 
+    fun setError(message: String) {
+        _errorMessage.value = message
+        _isError.value = true
+    }
+
     fun login() {
         viewModelScope.launch {
             try {
@@ -51,6 +56,22 @@ class LoginViewModel : ViewModel() {
                 _isTutor.value = false
                 _isAdmin.value = false
                 _clientId.value = null
+
+                // Локальная проверка для администратора и преподавателя
+                when {
+                    _email.value == "admin@gmail.com" && _password.value == "12345678" -> {
+                        Log.d("LoginViewModel", "Локальный вход администратора")
+                        _isAdmin.value = true
+                        _isLoginSuccessful.value = true
+                        return@launch
+                    }
+                    _email.value == "tutor@gmail.com" && _password.value == "12345678" -> {
+                        Log.d("LoginViewModel", "Локальный вход преподавателя")
+                        _isTutor.value = true
+                        _isLoginSuccessful.value = true
+                        return@launch
+                    }
+                }
 
                 val response = RetrofitInstance.api.login(_email.value, _password.value)
                 Log.d("LoginViewModel", "Получен ответ от сервера: ${response.code()}")

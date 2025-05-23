@@ -110,7 +110,19 @@ fun MainScreen(navController: NavController?) {
                 }
             }
             composable(BottomNavItem.Payment.route) {
-                PaymentScreen(navController = bottomNavController)
+                when (val currentClientId = clientId) {
+                    null -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("Ошибка: ID клиента не найден")
+                        }
+                    }
+                    else -> {
+                        PaymentScreen(navController = bottomNavController, clientId = currentClientId)
+                    }
+                }
             }
         }
     }

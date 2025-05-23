@@ -13,20 +13,42 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun PaymentScreen(navController: NavController?, viewModel: PaymentViewModel = viewModel()) {
+fun PaymentScreen(navController: NavController?, clientId: Int, viewModel: PaymentViewModel = viewModel()) {
     val paidLessons by viewModel.paidLessons
     val selectedLessons by viewModel.selectedLessons
     val discounts by viewModel.discounts
+    val error by viewModel.error
     val lessonPrice = 1500
 
-    val discountValues = mapOf(
-        "Многодетная семья" to 500,
-        "Приглашенный друг" to 300,
-        "Льгота" to 700
+    // Загружаем количество оплаченных занятий при первом запуске
+    LaunchedEffect(clientId) {
+        viewModel.loadPaidLessons(clientId)
+    }
+
+    val percentageDiscounts = mapOf(
+        "Многодетная семья" to 15, // 15% скидка
+        "Льгота" to 20 // 20% скидка
     )
 
-    val totalDiscount = discounts.sumOf { discountValues[it] ?: 0 }
-    val totalPrice = selectedLessons * lessonPrice - totalDiscount
+    val fixedDiscounts = mapOf(
+        "Приглашенный друг" to 1000 // 1000₽ фиксированная скидка
+    )
+
+    val basePrice = selectedLessons * lessonPrice
+    
+    // Считаем процентные скидки
+    val percentageDiscount = discounts
+        .filter { it in percentageDiscounts.keys }
+        .sumOf { percentageDiscounts[it] ?: 0 }
+    
+    // Считаем фиксированные скидки
+    val fixedDiscount = discounts
+        .filter { it in fixedDiscounts.keys }
+        .sumOf { fixedDiscounts[it] ?: 0 }
+    
+    // Применяем сначала процентные скидки, потом фиксированные
+    val priceAfterPercentage = basePrice * (100 - percentageDiscount) / 100
+    val totalPrice = priceAfterPercentage - fixedDiscount
 
     Column(
         modifier = Modifier
@@ -59,13 +81,24 @@ fun PaymentScreen(navController: NavController?, viewModel: PaymentViewModel = v
 
         Text(text = "Выбор дополнительных скидок", style = MaterialTheme.typography.bodyLarge)
         Column {
-            discountValues.keys.forEach { discount ->
+            // Отображаем процентные скидки
+            percentageDiscounts.keys.forEach { discount ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(
                         checked = discount in discounts,
                         onCheckedChange = { viewModel.toggleDiscount(discount) }
                     )
-                    Text(text = discount)
+                    Text(text = "$discount (${percentageDiscounts[discount]}%)")
+                }
+            }
+            // Отображаем фиксированные скидки
+            fixedDiscounts.keys.forEach { discount ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = discount in discounts,
+                        onCheckedChange = { viewModel.toggleDiscount(discount) }
+                    )
+                    Text(text = "$discount (${fixedDiscounts[discount]}₽)")
                 }
             }
         }
@@ -82,6 +115,24 @@ fun PaymentScreen(navController: NavController?, viewModel: PaymentViewModel = v
             Spacer(modifier = Modifier.width(8.dp))
 
             Text(text = "$totalPrice ₽", style = MaterialTheme.typography.headlineMedium)
+        }
+
+        if (error != null) {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = error!!,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { viewModel.pay(clientId) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Оплатить")
         }
 
         Spacer(modifier = Modifier.height(8.dp))

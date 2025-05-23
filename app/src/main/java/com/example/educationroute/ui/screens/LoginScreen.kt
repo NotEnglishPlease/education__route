@@ -36,29 +36,28 @@ fun LoginScreen(navController: NavController) {
     LaunchedEffect(isLoginSuccessful) {
         if (isLoginSuccessful) {
             Log.d("LoginScreen", "Вход выполнен успешно")
-            Log.d("LoginScreen", "clientId: $clientId")
-            clientId?.let { id ->
-                Log.d("LoginScreen", "Перенаправление на главный экран с clientId: $id")
             when {
-                    isAdmin -> {
-                        Log.d("LoginScreen", "Перенаправление на админ-панель")
-                        navController.navigate("admin_main")
-                    }
-                    isTutor -> {
-                        Log.d("LoginScreen", "Перенаправление на панель преподавателя")
-                        navController.navigate("tutor_courses")
-                    }
-                    else -> {
-                        Log.d("LoginScreen", "Перенаправление на главный экран")
+                isAdmin -> {
+                    Log.d("LoginScreen", "Перенаправление на админ-панель")
+                    navController.navigate("admin_main")
+                }
+                isTutor -> {
+                    Log.d("LoginScreen", "Перенаправление на панель преподавателя")
+                    navController.navigate("tutor_courses")
+                }
+                else -> {
+                    clientId?.let { id ->
+                        Log.d("LoginScreen", "Перенаправление на главный экран с clientId: $id")
                         mainViewModel.setClientId(id)
                         Log.d("LoginScreen", "clientId установлен в MainViewModel: $id")
                         navController.navigate("main") {
                             popUpTo("login") { inclusive = true }
                         }
+                    } ?: run {
+                        Log.e("LoginScreen", "clientId равен null")
+                        loginViewModel.setError("Ошибка: ID клиента не найден")
                     }
                 }
-            } ?: run {
-                Log.e("LoginScreen", "clientId равен null")
             }
         }
     }
